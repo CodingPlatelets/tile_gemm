@@ -1,18 +1,9 @@
 #include "sparse_to_dense.h"
-#include <cuda_runtime.h>
+#include "cuda_utils.h"
 #include <cstring>
-#include <iostream>
 
-// CUDA错误检查宏
-#define CUDA_CHECK(call) \
-    do { \
-        cudaError_t err = call; \
-        if (err != cudaSuccess) { \
-            std::cerr << "CUDA Error: " << cudaGetErrorString(err) \
-                      << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
-            return false; \
-        } \
-    } while(0)
+// 使用stderr版本的宏
+#define CUDA_CHECK(call) CUDA_CHECK_STDERR(call)
 
 void tileToDenseCPU(const TileData& tile, float* h_dense) {
     int total_size = tile.height * tile.width;

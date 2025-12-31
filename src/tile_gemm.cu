@@ -1,31 +1,13 @@
 #include "tile_gemm.h"
 #include "sparse_to_dense.h"
-#include <cuda_runtime.h>
-#include <cublas_v2.h>
-#include <iostream>
+#include "cuda_utils.h"
 #include <fstream>
 #include <iomanip>
 #include <cstring>
 
-// CUDA错误检查宏
-#define CUDA_CHECK(call) \
-    do { \
-        cudaError_t err = call; \
-        if (err != cudaSuccess) { \
-            error_msg = std::string("CUDA Error: ") + cudaGetErrorString(err); \
-            return false; \
-        } \
-    } while(0)
-
-// cuBLAS错误检查宏
-#define CUBLAS_CHECK(call) \
-    do { \
-        cublasStatus_t status = call; \
-        if (status != CUBLAS_STATUS_SUCCESS) { \
-            error_msg = "cuBLAS Error: " + std::to_string(status); \
-            return false; \
-        } \
-    } while(0)
+// 使用带error_msg的版本
+#define CUDA_CHECK(call) CUDA_CHECK_MSG(call, error_msg)
+#define CUBLAS_CHECK(call) CUBLAS_CHECK_MSG(call, error_msg)
 
 TileGEMM::TileGEMM() : cublas_handle(nullptr), initialized(false) {
 }

@@ -35,15 +35,15 @@ set(LIB_SOURCES
 
 # Create a static library for shared code
 add_library(tile_gemm_lib STATIC ${LIB_SOURCES})
-target_link_libraries(tile_gemm_lib CUDA::cublas)
+target_link_libraries(tile_gemm_lib CUDA::cublas CUDA::cudart)
 
 # Main executable
 add_executable(tile_gemm src/main.cu)
-target_link_libraries(tile_gemm tile_gemm_lib CUDA::cublas)
+target_link_libraries(tile_gemm tile_gemm_lib CUDA::cublas CUDA::cudart)
 
 # Test executable
 add_executable(test_correctness tests/test_correctness.cu)
-target_link_libraries(test_correctness tile_gemm_lib CUDA::cublas)
+target_link_libraries(test_correctness tile_gemm_lib CUDA::cublas CUDA::cudart)
 
 # Set output directory
 set_target_properties(tile_gemm test_correctness
