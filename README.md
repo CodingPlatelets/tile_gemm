@@ -15,10 +15,22 @@
 ## 依赖
 
 - CUDA 11.0 或更高版本
-- CUTLASS v2.11.0（已包含在 `third_party/cutlass` 目录）
+- CUTLASS v2.11.0（通过 Git 子模块管理）
 - gcc 7.5 或更高版本
 
-**注意**: 首次克隆项目后，CUTLASS 库已包含在 `third_party/` 目录中，无需额外下载。
+## 获取项目
+
+本项目使用 Git 子模块管理 CUTLASS 依赖。克隆时请使用：
+
+```bash
+# 方法 1：克隆时同时获取子模块（推荐）
+git clone --recursive <your-repo-url>
+
+# 方法 2：如果已经克隆，执行以下命令获取子模块
+git submodule update --init --recursive
+```
+
+**注意**: 如果不使用 `--recursive` 选项，`third_party/cutlass` 目录将是空的。
 
 ## 编译
 
