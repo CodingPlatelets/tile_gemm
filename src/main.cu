@@ -78,14 +78,14 @@ int main(int argc, char* argv[]) {
     std::cout << "  B tiles loaded: " << matrix_B.tiles.size() << std::endl;
     
     // 2. 初始化GEMM计算器
-    std::cout << "\n[Step 2] Initializing cuBLAS..." << std::endl;
+    std::cout << "\n[Step 2] Initializing GEMM engine..." << std::endl;
     
     TileGEMM gemm;
     if (!gemm.init()) {
-        std::cerr << "Error initializing cuBLAS: " << gemm.getError() << std::endl;
+        std::cerr << "Error initializing GEMM engine: " << gemm.getError() << std::endl;
         return 1;
     }
-    std::cout << "  cuBLAS initialized successfully" << std::endl;
+    std::cout << "  GEMM engine initialized successfully" << std::endl;
     
     // 3. 执行分块矩阵乘法
     std::cout << "\n[Step 3] Computing tile-based GEMM..." << std::endl;

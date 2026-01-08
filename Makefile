@@ -7,8 +7,8 @@ NVCC = nvcc
 # Compiler flags
 # for gpgpu sim
 NVCC_FLAGS = -std=c++14 -O3 -arch=sm_70 --cudart shared
-INCLUDES = -I./include
-LIBS = -lcublas
+INCLUDES = -I./include -I./third_party/cutlass/include
+LIBS =
 
 # Directories
 SRC_DIR = src
@@ -21,7 +21,7 @@ CUDA_SOURCES = $(SRC_DIR)/main.cu $(SRC_DIR)/tile_gemm.cu $(SRC_DIR)/sparse_to_d
 CPP_SOURCES = $(SRC_DIR)/tile_reader.cpp
 
 # Object files (library components, without main)
-LIB_OBJECTS = $(BUILD_DIR)/tile_gemm.o $(BUILD_DIR)/sparse_to_dense.o $(BUILD_DIR)/tile_reader.o
+LIB_OBJECTS = $(BUILD_DIR)/tile_gemm.o $(BUILD_DIR)/sparse_to_dense.o $(BUILD_DIR)/tile_reader.o $(BUILD_DIR)/cutlass_gemm.o
 
 # Main program object
 MAIN_OBJECT = $(BUILD_DIR)/main.o
@@ -59,6 +59,9 @@ $(BUILD_DIR)/tile_gemm.o: $(SRC_DIR)/tile_gemm.cu
 	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -c -o $@ $<
 
 $(BUILD_DIR)/sparse_to_dense.o: $(SRC_DIR)/sparse_to_dense.cu
+	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -c -o $@ $<
+
+$(BUILD_DIR)/cutlass_gemm.o: $(SRC_DIR)/cutlass_gemm.cu
 	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -c -o $@ $<
 
 # Compile C++ sources

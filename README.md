@@ -1,6 +1,6 @@
 # Tile-based Matrix Multiplication with CUDA
 
-基于 tile 分块的矩阵乘法 CUDA 实现，支持从文件夹读取矩阵数据，使用 cuBLAS 执行分块 GEMM。
+基于 tile 分块的矩阵乘法 CUDA 实现，支持从文件夹读取矩阵数据，使用 CUTLASS 开源库执行分块 GEMM。
 
 ## 功能特性
 
@@ -8,9 +8,17 @@
 - 自动从元素坐标推断 tile 位置
 - 支持不同形状的 tile（只需保证相乘的 tile 维度兼容）
 - 支持 A 和 B 矩阵有不同数量的 tile
-- 使用 cuBLAS 执行分块 GEMM
+- 使用 CUTLASS 开源库执行分块 GEMM
 - 包含正确性测试（对比直接乘法和分块乘法结果）
 - 支持 CUDA 11.0+，兼容 gcc7.5+
+
+## 依赖
+
+- CUDA 11.0 或更高版本
+- CUTLASS v2.11.0（已包含在 `third_party/cutlass` 目录）
+- gcc 7.5 或更高版本
+
+**注意**: 首次克隆项目后，CUTLASS 库已包含在 `third_party/` 目录中，无需额外下载。
 
 ## 编译
 
@@ -80,7 +88,7 @@ make run_test_verbose
 ```
 
 测试会：
-1. 将所有 tile 合并为完整矩阵，使用 cuBLAS 直接计算
+1. 将所有 tile 合并为完整矩阵，使用 CUTLASS 直接计算
 2. 使用我们的分块算法计算
 3. 比较两种方法的结果是否一致
 
@@ -190,15 +198,20 @@ tile_gemm/
 ├── include/
 │   ├── tile_reader.h        # 文件读取接口
 │   ├── sparse_to_dense.h    # 稀疏转稠密工具
-│   └── tile_gemm.h          # GEMM计算接口
+│   ├── tile_gemm.h          # GEMM计算接口
+│   ├── cutlass_gemm.h       # CUTLASS GEMM包装器
+│   └── cuda_utils.h         # CUDA工具宏
 ├── src/
 │   ├── tile_reader.cpp      # 文件读取实现
 │   ├── sparse_to_dense.cu   # 稀疏转稠密CUDA实现
-│   ├── tile_gemm.cu         # cuBLAS GEMM封装
+│   ├── tile_gemm.cu         # Tile GEMM实现
+│   ├── cutlass_gemm.cu      # CUTLASS GEMM封装
 │   └── main.cu              # 主程序入口
 ├── tests/
 │   └── test_correctness.cu  # 正确性测试
 ├── test_data/               # 测试数据
+├── third_party/
+│   └── cutlass/             # CUTLASS 库
 ├── build/                   # Makefile 编译输出目录
 ├── cmake_build/             # CMake 编译输出目录
 ├── Makefile

@@ -21,7 +21,7 @@ void tileToDenseCPU(const TileData& tile, float* h_dense) {
         // 验证坐标有效性
         if (local_row >= 0 && local_row < tile.height &&
             local_col >= 0 && local_col < tile.width) {
-            // 列主序存储（cuBLAS格式）
+            // 列主序存储
             int idx = local_col * tile.height + local_row;
             h_dense[idx] = elem.value;
         }

@@ -3,11 +3,11 @@
 #include <cmath>
 #include <cstring>
 #include <cuda_runtime.h>
-#include <cublas_v2.h>
 
 #include "tile_reader.h"
 #include "sparse_to_dense.h"
 #include "tile_gemm.h"
+#include "cutlass_gemm.h"
 
 // 测试配置
 const float EPSILON = 1e-5f;
@@ -41,14 +41,13 @@ void matrixDataToDenseCPU(const MatrixData& matrix_data, float* h_matrix) {
     }
 }
 
-// 直接矩阵乘法（将所有tile合并后使用cuBLAS计算）
+// 直接矩阵乘法（将所有tile合并后使用 CUTLASS 计算）
 bool directGemm(const MatrixData& matrix_A, const MatrixData& matrix_B,
                 float* h_result, int result_rows, int result_cols) {
-    // 初始化cuBLAS
-    cublasHandle_t handle;
-    cublasStatus_t status = cublasCreate(&handle);
-    if (status != CUBLAS_STATUS_SUCCESS) {
-        std::cerr << "Failed to create cuBLAS handle" << std::endl;
+    // 初始化 CUTLASS GEMM
+    CutlassGemm cutlass_gemm;
+    if (!cutlass_gemm.init()) {
+        std::cerr << "Failed to initialize CUTLASS GEMM" << std::endl;
         return false;
     }
     
@@ -59,14 +58,12 @@ bool directGemm(const MatrixData& matrix_A, const MatrixData& matrix_B,
     
     if (!matrixTilesToDense(matrix_A, &d_A)) {
         std::cerr << "Failed to convert A matrix to dense" << std::endl;
-        cublasDestroy(handle);
         return false;
     }
     
     if (!matrixTilesToDense(matrix_B, &d_B)) {
         std::cerr << "Failed to convert B matrix to dense" << std::endl;
         cudaFree(d_A);
-        cublasDestroy(handle);
         return false;
     }
     
@@ -77,7 +74,6 @@ bool directGemm(const MatrixData& matrix_A, const MatrixData& matrix_B,
         std::cerr << "Failed to allocate GPU memory for result" << std::endl;
         cudaFree(d_A);
         cudaFree(d_B);
-        cublasDestroy(handle);
         return false;
     }
     cudaMemset(d_C, 0, result_size * sizeof(float));
@@ -90,21 +86,15 @@ bool directGemm(const MatrixData& matrix_A, const MatrixData& matrix_B,
     int N = matrix_B.meta.cols;  // B的列数
     int K = matrix_A.meta.cols;  // A的列数 = B的行数
     
-    status = cublasSgemm(handle,
-                         CUBLAS_OP_N, CUBLAS_OP_N,
-                         M, N, K,
-                         &alpha,
-                         d_A, M,
-                         d_B, K,
-                         &beta,
-                         d_C, M);
-    
-    if (status != CUBLAS_STATUS_SUCCESS) {
-        std::cerr << "cuBLAS GEMM failed: " << status << std::endl;
+    if (!cutlass_gemm.gemm(d_A, M,
+                           d_B, K,
+                           d_C, M,
+                           M, N, K,
+                           alpha, beta)) {
+        std::cerr << "CUTLASS GEMM failed: " << cutlass_gemm.getError() << std::endl;
         cudaFree(d_A);
         cudaFree(d_B);
         cudaFree(d_C);
-        cublasDestroy(handle);
         return false;
     }
     
@@ -115,7 +105,6 @@ bool directGemm(const MatrixData& matrix_A, const MatrixData& matrix_B,
     cudaFree(d_A);
     cudaFree(d_B);
     cudaFree(d_C);
-    cublasDestroy(handle);
     
     return true;
 }

@@ -7,21 +7,16 @@
 
 // 使用带error_msg的版本
 #define CUDA_CHECK(call) CUDA_CHECK_MSG(call, error_msg)
-#define CUBLAS_CHECK(call) CUBLAS_CHECK_MSG(call, error_msg)
 
-TileGEMM::TileGEMM() : cublas_handle(nullptr), initialized(false) {
+TileGEMM::TileGEMM() : initialized(false) {
 }
 
 TileGEMM::~TileGEMM() {
-    if (initialized && cublas_handle) {
-        cublasDestroy(cublas_handle);
-    }
 }
 
 bool TileGEMM::init() {
-    cublasStatus_t status = cublasCreate(&cublas_handle);
-    if (status != CUBLAS_STATUS_SUCCESS) {
-        error_msg = "Failed to create cuBLAS handle";
+    if (!cutlass_gemm.init()) {
+        error_msg = "Failed to initialize CUTLASS GEMM: " + cutlass_gemm.getError();
         return false;
     }
     initialized = true;
@@ -35,24 +30,26 @@ bool TileGEMM::gemmTile(const float* d_A, const float* d_B, float* d_C,
         return false;
     }
     
-    // cuBLAS使用列主序
+    // 使用 CUTLASS 执行 GEMM
     // C = alpha * A * B + beta * C
-    // 对于列主序：cublasSgemm(handle, transA, transB, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc)
-    // m = C的行数, n = C的列数, k = A的列数/B的行数
+    // 矩阵使用列主序存储
+    // A: M x K, B: K x N, C: M x N
     
     const float alpha = 1.0f;
     const float beta = 1.0f;  // 累加到C
     
-    // 注意：cuBLAS使用列主序，所以实际计算的是 C^T = B^T * A^T
-    // 我们的数据已经是列主序存储的，所以直接调用
-    CUBLAS_CHECK(cublasSgemm(cublas_handle,
-                             CUBLAS_OP_N, CUBLAS_OP_N,
-                             M, N, K,
-                             &alpha,
-                             d_A, M,    // A: M x K
-                             d_B, K,    // B: K x N
-                             &beta,
-                             d_C, M));  // C: M x N
+    // 调用 CUTLASS GEMM
+    // lda = M (列主序下 A 的 leading dimension)
+    // ldb = K (列主序下 B 的 leading dimension)
+    // ldc = M (列主序下 C 的 leading dimension)
+    if (!cutlass_gemm.gemm(d_A, M,     // A 和其 leading dimension
+                           d_B, K,     // B 和其 leading dimension
+                           d_C, M,     // C 和其 leading dimension
+                           M, N, K,    // 矩阵尺寸
+                           alpha, beta)) {
+        error_msg = "CUTLASS GEMM failed: " + cutlass_gemm.getError();
+        return false;
+    }
     
     return true;
 }

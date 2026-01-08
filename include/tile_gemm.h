@@ -2,7 +2,7 @@
 #define TILE_GEMM_H
 
 #include "tile_reader.h"
-#include <cublas_v2.h>
+#include "cutlass_gemm.h"
 
 // GEMM计算器类
 class TileGEMM {
@@ -10,7 +10,7 @@ public:
     TileGEMM();
     ~TileGEMM();
     
-    // 初始化cuBLAS
+    // 初始化 GEMM 引擎
     bool init();
     
     // 执行完整的分块矩阵乘法 C = A * B
@@ -36,7 +36,7 @@ public:
     const std::string& getError() const { return error_msg; }
 
 private:
-    cublasHandle_t cublas_handle;
+    CutlassGemm cutlass_gemm;
     bool initialized;
     std::string error_msg;
 };
