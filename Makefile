@@ -13,7 +13,7 @@ LIBS =
 # Directories
 SRC_DIR = src
 INC_DIR = include
-BUILD_DIR = build
+BUILD_DIR = mbuild
 TEST_DIR = tests
 
 # Source files

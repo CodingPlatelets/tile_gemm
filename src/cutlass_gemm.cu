@@ -1,5 +1,4 @@
 #include "cutlass_gemm.h"
-#include <iostream>
 
 // CUTLASS 头文件
 #include "cutlass/gemm/device/gemm.h"
