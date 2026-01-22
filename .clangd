@@ -1,2 +1,6 @@
 CompileFlags:
-  CompilationDatabase: cmake_build/
+  CompilationDatabase: build/
+  Remove:
+    - -forward-unknown-to-host-compiler
+    - --cudart
+    - --generate-code=*

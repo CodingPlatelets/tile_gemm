@@ -4,7 +4,7 @@
 
 set -e
 
-BUILD_DIR="cmake_build"
+BUILD_DIR="build"
 
 # Create build directory
 mkdir -p ${BUILD_DIR}
